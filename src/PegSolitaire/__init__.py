@@ -80,7 +80,7 @@ class PegBoard:
         for i in range(len(source)):     
             #round statement added to the append to ensure that the calling function receives 
             #integers rather than floats
-            pegBetweenCoordinates.append(round(source[i] - (source[i]-target[i])/2))
+            pegBetweenCoordinates.append(int(source[i] - (source[i]-target[i])/2))
         
         
         return pegBetweenCoordinates
@@ -114,8 +114,31 @@ class EnglishBoard(PegBoard):
                     self.board[row][column] = OPEN
                 else:
                     self.board[row][column] = PEG
-                    
+    
+    '''OVERRIDE OF THE 'TOSTRING' METHOD:
+    This method overrides the to-string method so that if a print(object) command is called, 
+    this method will execute by default. The method prints out a formatted display of the game board,
+    with open spaces represented as 0's and pegs represented as 1's.'''
+    def __str__(self):
+        string = ""
+        #The (BOARDSIZE-(row+1)) statement relates to ensuring that the board and 
+        #coordinates are printed out "right side up."
+        for row in range(BOARDSIZE):
+            print(row)
+            string = string + "Row " + str(BOARDSIZE - (row+1)) + ": "
+            for column in range(BOARDSIZE):
+                if(self.board[BOARDSIZE - (row+1)][column] != 9):
+                    string= string + str(self.board[BOARDSIZE - (row+1)][column]) + " "
+                else:
+                    string = string + "  "
+            string = string+ "\n"
+        string = string + "Col:   "
+        for column in range(BOARDSIZE):
+            string = string + str(column) + " "
         
+        return string
+    
+    
     '''The Move method accepts a pair of two-integer lists describing the coordinates of the source 
     space and target space of the move. The method first checks to see if the specified move is legal. 
     If it is not legal, a variety of exceptions are 
