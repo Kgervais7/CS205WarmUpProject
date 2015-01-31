@@ -16,27 +16,27 @@ BOARDSIZE = 9
 TWOSPACES = 2
 
 '''The PegBoard superclass contains the coordinate checking logic which ensures that the move is legal.
-This logic is largely shared between triangle solitaire and english solitaire, with the exception that 
+This logic is largely shared between triangle solitaire and english solitaire, with the exception that
 triangle solitaire has an extra diagonal degree of movement.'''
 class PegBoard:
-    
+   
     '''The check coordinate bounds method returns false if the source or target coordinates are outside
     of the bounds of the lists representing the board '''
     def checkCoordinateBounds(self, source, target):
-        
+       
         #For the length of the source coordinates
         for index in range(len(source)):
             #Bundle the source and target into a single tuple in order to promote code reuse below
             for coordinates in (source, target):
-                #if any value in the array is greater than or equal to the board size, or less than 
+                #if any value in the array is greater than or equal to the board size, or less than
                 #zero, return false.
                 if coordinates[index] >= BOARDSIZE or coordinates[index] < 0:
                     return False
         #If all error checks are good, return true, indicating that the given coordinates are inside the
         #bounds of the game board lists.
         return True
-    
-    '''The check source and target method checks to ensure that the source space on the board is occupied by a peg, 
+   
+    '''The check source and target method checks to ensure that the source space on the board is occupied by a peg,
     and that the target space on the board is open, returning false if either condition is violated.'''
     def checkSourceAndTarget(self, source, target):
         if(self.board[source[0]][source[1]] != PEG):
@@ -45,12 +45,12 @@ class PegBoard:
             return False
         else:
             return True
-          
-        
+         
+       
     '''CheckLegalMoveEnglish method checks the source and target coordinates to ensure the moves are orthogonal,
     as well as checking to see if the source and target are exactly two spaces away from each other.'''
     def checkLegalMoveEnglish(self, source, target):
-        
+       
         for index in range(len(source)):
             #if the source and the target match for a given index, then this is the row or column in which they are aligned
             if source[index] == target[index]:
@@ -58,48 +58,51 @@ class PegBoard:
                     return abs(source[0] - target[0]) == TWOSPACES
                 else:
                     return abs(source[index+1]-target[index+1]) == TWOSPACES
-        
+       
         return False
                    
-    
+   
     '''Check Peg Between examines the space between the source and the target coordinates to ensure
     that there is a peg present between the two coordinates.'''
     def checkPegBetween(self, source, target):
-        
+       
         spaceBetween = self.indexOfPegBetween(source, target)
-        print(spaceBetween[0], spaceBetween[1])
+       
         return self.board[spaceBetween[0]][spaceBetween[1]] == PEG
-                    
-    
-    '''Index of peg Between contains the logic which returns the index coordinates of the space between the target'''        
+                   
+   
+    '''Index of peg Between contains the logic which returns the index coordinates of the space between the target'''       
     def indexOfPegBetween(self, source, target):
-        
+       
         #set to open contains the coordinates of the space on the board which we wish to set to "open"
         pegBetweenCoordinates = []
         #row delta is the absolute change in the row coordinate for the "Peg Between"
         for i in range(len(source)):     
-            #round statement added to the append to ensure that the calling function receives 
+            #round statement added to the append to ensure that the calling function receives
             #integers rather than floats
             pegBetweenCoordinates.append(int(source[i] - (source[i]-target[i])/2))
-        
-        
+       
+       
         return pegBetweenCoordinates
-            
+           
 '''NOTE: PUT ALL EXCEPTION DEFINITIONS HERE'''
 class PegBoardConfigurationError(Exception):
-    '''Raise this exception when there is some pertinent error in the 
+    '''Raise this exception when there is some pertinent error in the
     gameboard which prevents a specified move'''
 class PegBoardMoveError(Exception):
-    '''Raise this exception when the specified move is not 
+    '''Raise this exception when the specified move is not
     legal according to the specified pegboard move rules'''
-        
-    
+   
+class EnglishWinError(Exception):
+    '''Raise this exception when only 1 peg remains standing on the board'''
+       
+   
 class EnglishBoard(PegBoard):
 
     def __init__(self):
-        
+       
         self.board = [[1 for x in range(BOARDSIZE)] for x in range(BOARDSIZE)]
-    
+   
         for row in range(BOARDSIZE):
             for column in range(BOARDSIZE):
                 if row < 3 and column < 3:
@@ -114,14 +117,36 @@ class EnglishBoard(PegBoard):
                     self.board[row][column] = OPEN
                 else:
                     self.board[row][column] = PEG
-                    
-        
-    '''The Move method accepts a pair of two-integer lists describing the coordinates of the source 
-    space and target space of the move. The method first checks to see if the specified move is legal. 
-    If it is not legal, a variety of exceptions are 
+   
+    '''OVERRIDE OF THE 'TOSTRING' METHOD:
+    This method overrides the to-string method so that if a print(object) command is called,
+    this method will execute by default. The method prints out a formatted display of the game board,
+    with open spaces represented as 0's and pegs represented as 1's.'''
+    def __str__(self):
+        string = ""
+        #The (BOARDSIZE-(row+1)) statement relates to ensuring that the board and
+        #coordinates are printed out "right side up."
+        for row in range(BOARDSIZE):
+            string = string + "Row " + str(BOARDSIZE - (row+1)) + ": "
+            for column in range(BOARDSIZE):
+                if(self.board[BOARDSIZE - (row+1)][column] != 9):
+                    string= string + str(self.board[BOARDSIZE - (row+1)][column]) + " "
+                else:
+                    string = string + "  "
+            string = string+ "\n"
+        string = string + "Col:   "
+        for column in range(BOARDSIZE):
+            string = string + str(column) + " "
+       
+        return string
+   
+   
+    '''The Move method accepts a pair of two-integer lists describing the coordinates of the source
+    space and target space of the move. The method first checks to see if the specified move is legal.
+    If it is not legal, a variety of exceptions are
     thrown. If the move passes all the specified tests, then it is accepted and updated on the board.'''
     def move(self, source, target):
-        #Check the exception-raising issues. 
+        #Check the exception-raising issues.
         #1.) Firstly, whether the specified coordinates are within the index boundaries of the pertinent lists.
         if(not(self.checkCoordinateBounds(source, target))):
             raise IndexError("Specified Coordinates Outside of Game Boundaries.")
@@ -134,8 +159,8 @@ class EnglishBoard(PegBoard):
         #4.) check that the specified source and target space have a space occupied by a peg between them.
         elif(not(self.checkPegBetween(source, target))):
             raise PegBoardMoveError("Specified move does not contain a peg between the source and target space.")
-        
-        
+       
+       
         ####IF AND ONLY IF ALL ERROR CHECKS ARE PASSED
         # Execute the move on the board, setting the source coordinate to OPEN, and the target coordinate to PEG.
         self.board[source[0]][source[1]] = OPEN
@@ -143,3 +168,22 @@ class EnglishBoard(PegBoard):
         #lastly, get the index of the intervening peg and set it to open(removing the peg)
         pegBetween = self.indexOfPegBetween(source, target)
         self.board[pegBetween[0]][pegBetween[1]] = OPEN
+       
+        '''Lastly, check if the player has won by executing the checkOnePegRemaining method'''
+        if self.checkOnePegRemaining() == True:
+            raise EnglishWinError
+       
+    '''The CheckOnePegRemaining class performs a linear scan of the array and returns true if only one
+    peg has been found, and false otherwise. This is used to check if the player has "won" by eliminating all but
+    one peg.'''
+    def checkOnePegRemaining(self):
+        count = 0;
+        for row in range(BOARDSIZE):
+            for column in range(BOARDSIZE):
+                if self.board[row][column] == PEG:
+                    count += 1
+       
+        if count == 1:
+            return True
+        else:
+            return False
